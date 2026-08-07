@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: price-tracker-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pricetracker
+      POSTGRES_PASSWORD: pricetracker_dev_password
+      POSTGRES_DB: pricetracker_dev
+    ports:
+      - "5433:5432"
+    volumes:
+      - pricetracker_pg_data:/var/lib/postgresql/data
+
+volumes:
+  pricetracker_pg_data:
