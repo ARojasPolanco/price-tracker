@@ -1,23 +1,8 @@
 import "dotenv/config";
-import express from "express";
-import cors from "cors";
 import { sequelize } from "./config/database.js";
-import productRoutes from "./routes/productRoutes.js";
-import { globalErrorHandler } from "./errors/error.controller.js";
+import app from "./app.js";
 
-const app = express();
 const PORT = process.env.PORT || 3000;
-
-app.use(cors());
-app.use(express.json());
-
-app.get("/api/health", (req, res) => {
-  res.json({ status: "ok" });
-});
-
-app.use("/api/products", productRoutes);
-
-app.use(globalErrorHandler);
 
 async function start() {
   try {

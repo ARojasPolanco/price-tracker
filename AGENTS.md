@@ -18,6 +18,14 @@ Arrancó como una herramienta simple para no memorizar precios (ya en producció
 
 Mismo patrón de siempre: `Route → Controller → Service → Model`, con validación Zod en cada endpoint que recibe datos. Nada de lógica de negocio en controllers ni en rutas.
 
+## Estructura del servidor
+
+- **`src/app.js`**: arma y exporta la instancia de Express (middlewares globales, rutas, error handler). No conecta a la base de datos ni levanta el server — solo define qué es la app. Esto permite testear la app con supertest sin abrir un puerto real.
+- **`src/index.js`** (o `server.js`): importa `app.js`, conecta y sincroniza la base de datos, y recién ahí llama a `app.listen()`. Es el único archivo que "enciende" algo.
+- **`src/routes/routes.js`**: agregador central de rutas. Cada recurso tiene su propio archivo de rutas (`auth.routes.js`, `products.routes.js`, etc.) montado bajo un prefijo (`/api/v1/...`) en este agregador — no montar cada router suelto directo en `app.js`.
+- **Middlewares de seguridad en `app.js`**: `helmet()` para headers de seguridad, `cors()` con origin restringido en producción, y `express-rate-limit` — un limiter global suave (100 req/min) y uno más estricto específico para `/auth/login` (5 intentos/min), dado que el login de vendedor es una contraseña compartida y vale la pena protegerlo de fuerza bruta.
+- No copiar lógica de negocio de otros proyectos al armar esto — la estructura (separación de archivos, middlewares de seguridad) es reutilizable, el contenido de negocio de cada proyecto no.
+
 ## Flujo de trabajo Git
 
 - Rama base de desarrollo: `dev`. Todo el trabajo de esta expansión parte de ahí.
