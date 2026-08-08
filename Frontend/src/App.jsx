@@ -11,6 +11,7 @@ export default function App() {
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
   const [view, setView] = useState("products");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
@@ -35,106 +36,112 @@ export default function App() {
     localStorage.removeItem("user");
   }
 
+  function navigateTo(viewName) {
+    setView(viewName);
+    setMenuOpen(false);
+  }
+
   if (!token) {
     return <Login onLogin={handleLogin} />;
   }
 
   const isAdmin = user?.role === "administrador";
 
+  const menuItems = [
+    { key: "products", label: "Productos", icon: "📦" },
+    { key: "new-sale", label: "Nueva Venta", icon: "🛒" },
+    ...(isAdmin
+      ? [
+          { key: "credit-accounts", label: "Cuentas Corrientes", icon: "📋" },
+          { key: "expenses", label: "Gastos", icon: "💸" },
+          { key: "invoices", label: "Facturas", icon: "📄" },
+          { key: "reports", label: "Reportes", icon: "📊" },
+        ]
+      : []),
+  ];
+
+  const currentLabel = menuItems.find((m) => m.key === view)?.label || "Menú";
+
   return (
-    <div>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
       {/* Navbar */}
-      <div className="bg-white border-b border-gray-200 px-4 py-2">
-        <div className="flex items-center justify-between mb-2">
-          <div className="text-sm text-gray-600">
-            <span className="font-medium">{user.username}</span>
-            <span className="ml-2 text-xs bg-gray-100 px-2 py-0.5 rounded-full">
-              {user.role}
-            </span>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="text-xs text-gray-500 hover:text-gray-700"
-          >
-            Salir
-          </button>
-        </div>
-        {/* Tabs de navegación */}
-        <div className="flex gap-1 overflow-x-auto">
-          <button
-            onClick={() => setView("products")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
-              view === "products"
-                ? "bg-indigo-100 text-indigo-700"
-                : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-            }`}
-          >
-            Productos
-          </button>
-          <button
-            onClick={() => setView("new-sale")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
-              view === "new-sale"
-                ? "bg-indigo-100 text-indigo-700"
-                : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-            }`}
-          >
-            Nueva Venta
-          </button>
-          {isAdmin && (
+      <div className="bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
+          {isAdmin ? (
             <>
+              {/* Admin: menú hamburguesa */}
               <button
-                onClick={() => setView("credit-accounts")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
-                  view === "credit-accounts"
-                    ? "bg-indigo-100 text-indigo-700"
-                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-                }`}
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="p-2 rounded-lg hover:bg-gray-100 active:scale-95 transition-all"
               >
-                Cuentas
+                <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {menuOpen ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                  )}
+                </svg>
               </button>
+              <div className="flex-1 text-center">
+                <h1 className="text-sm font-bold text-gray-800">{currentLabel}</h1>
+                <p className="text-xs text-gray-500">{user.username}</p>
+              </div>
               <button
-                onClick={() => setView("expenses")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
-                  view === "expenses"
-                    ? "bg-indigo-100 text-indigo-700"
-                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-                }`}
+                onClick={handleLogout}
+                className="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg font-medium hover:bg-gray-200 active:scale-95 transition-all"
               >
-                Gastos
+                Salir
               </button>
+            </>
+          ) : (
+            <>
+              {/* Vendedor: navbar más grande */}
+              <div>
+                <h1 className="text-lg font-bold text-gray-800">Price Tracker</h1>
+                <p className="text-xs text-gray-500">{user.username} — Vendedor</p>
+              </div>
               <button
-                onClick={() => setView("invoices")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
-                  view === "invoices"
-                    ? "bg-indigo-100 text-indigo-700"
-                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-                }`}
+                onClick={handleLogout}
+                className="bg-red-100 text-red-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-200 active:scale-95 transition-all"
               >
-                Facturas
-              </button>
-              <button
-                onClick={() => setView("reports")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
-                  view === "reports"
-                    ? "bg-indigo-100 text-indigo-700"
-                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                Reportes
+                Salir
               </button>
             </>
           )}
         </div>
       </div>
 
+      {/* Menú hamburguesa (admin) */}
+      {isAdmin && menuOpen && (
+        <div className="bg-white border-b border-gray-200 shadow-md">
+          <div className="max-w-md mx-auto px-4 py-2">
+            {menuItems.map((item) => (
+              <button
+                key={item.key}
+                onClick={() => navigateTo(item.key)}
+                className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all ${
+                  view === item.key
+                    ? "bg-indigo-100 text-indigo-700"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                <span className="text-lg">{item.icon}</span>
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Contenido */}
-      {view === "products" && <ProductList token={token} />}
-      {view === "new-sale" && <SaleForm />}
-      {view === "credit-accounts" && isAdmin && <CreditAccounts />}
-      {view === "expenses" && isAdmin && <Expenses />}
-      {view === "invoices" && isAdmin && <Invoices />}
-      {view === "reports" && isAdmin && <Reports />}
+      <div className="max-w-md mx-auto">
+        {view === "products" && <ProductList token={token} />}
+        {view === "new-sale" && <SaleForm />}
+        {view === "credit-accounts" && isAdmin && <CreditAccounts />}
+        {view === "expenses" && isAdmin && <Expenses />}
+        {view === "invoices" && isAdmin && <Invoices />}
+        {view === "reports" && isAdmin && <Reports />}
+      </div>
     </div>
   );
 }
