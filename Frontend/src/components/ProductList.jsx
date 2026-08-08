@@ -17,6 +17,9 @@ export default function ProductList({ token }) {
   const [editSaleType, setEditSaleType] = useState("unidad");
   const [error, setError] = useState(null);
 
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const isAdmin = user.role === "administrador";
+
   async function load() {
     try {
       const [productsData, categoriesData] = await Promise.all([
@@ -93,15 +96,13 @@ export default function ProductList({ token }) {
   }
 
   function startEdit(product) {
+    if (!product.available) return;
     setEditingId(product.id);
     setEditName(product.name);
     setEditPrice(product.price);
     setEditCategoryId(product.categoryId || "");
     setEditSaleType(product.saleType || "unidad");
   }
-
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const isAdmin = user.role === "administrador";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
@@ -120,55 +121,57 @@ export default function ProductList({ token }) {
           </div>
         )}
 
-        {/* Formulario compacto */}
-        <form onSubmit={handleCreate} className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mb-3">
-          <div className="flex gap-2 mb-2">
-            <input
-              type="text"
-              placeholder="Nombre"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            />
-            <input
-              type="number"
-              placeholder="$"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              required
-              min="0"
-              step="0.01"
-              className="w-20 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            />
-          </div>
-          <div className="flex gap-2 mb-2">
-            <select
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
-              className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+        {/* Formulario compacto - solo admin */}
+        {isAdmin && (
+          <form onSubmit={handleCreate} className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mb-3">
+            <div className="flex gap-2 mb-2">
+              <input
+                type="text"
+                placeholder="Nombre"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+              <input
+                type="number"
+                placeholder="$"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                required
+                min="0"
+                step="0.01"
+                className="w-20 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+            </div>
+            <div className="flex gap-2 mb-2">
+              <select
+                value={categoryId}
+                onChange={(e) => setCategoryId(e.target.value)}
+                className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              >
+                <option value="">Sin categoría</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+              <select
+                value={saleType}
+                onChange={(e) => setSaleType(e.target.value)}
+                className="w-28 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              >
+                <option value="unidad">Unidad</option>
+                <option value="kilo">Kilo</option>
+              </select>
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2.5 rounded-lg font-medium text-sm hover:shadow-lg active:scale-98 transition-all duration-200"
             >
-              <option value="">Sin categoría</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-            <select
-              value={saleType}
-              onChange={(e) => setSaleType(e.target.value)}
-              className="w-28 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            >
-              <option value="unidad">Unidad</option>
-              <option value="kilo">Kilo</option>
-            </select>
-          </div>
-          <button
-            type="submit"
-            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2.5 rounded-lg font-medium text-sm hover:shadow-lg active:scale-98 transition-all duration-200"
-          >
-            Agregar producto
-          </button>
-        </form>
+              Agregar producto
+            </button>
+          </form>
+        )}
 
         {/* Buscador y filtro */}
         <div className="flex gap-2 mb-3">
@@ -201,7 +204,11 @@ export default function ProductList({ token }) {
           {products.map((p) => (
             <div
               key={p.id}
-              className={`bg-white rounded-xl shadow-sm border border-gray-100 p-3 ${!p.available ? 'opacity-60' : ''}`}
+              className={`bg-white rounded-xl shadow-sm border p-3 ${
+                !p.available
+                  ? 'border-red-200 bg-red-50'
+                  : 'border-gray-100'
+              }`}
             >
               {editingId === p.id ? (
                 <div className="space-y-2">
@@ -257,9 +264,16 @@ export default function ProductList({ token }) {
               ) : (
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-gray-800 text-sm truncate">{p.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-medium text-gray-800 text-sm truncate">{p.name}</h3>
+                      {!p.available && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 border border-red-200">
+                          NO DISPONIBLE
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <p className="text-indigo-600 font-bold text-sm">
+                      <p className={`font-bold text-sm ${!p.available ? 'text-gray-400' : 'text-indigo-600'}`}>
                         ${parseFloat(p.price).toFixed(2)}
                       </p>
                       <span className="text-xs text-gray-400">
@@ -267,48 +281,56 @@ export default function ProductList({ token }) {
                       </span>
                     </div>
                     {p.Category && (
-                      <span className="inline-block mt-1 text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                      <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full ${
+                        !p.available
+                          ? 'bg-gray-100 text-gray-400'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}>
                         {p.Category.name}
                       </span>
                     )}
                   </div>
                   <div className="flex gap-1.5 ml-2">
                     {isAdmin && (
-                      <button
-                        onClick={() => handleToggleAvailable(p)}
-                        className={`p-2 rounded-lg transition-all ${
-                          p.available
-                            ? 'bg-green-100 text-green-600 hover:bg-green-200'
-                            : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
-                        }`}
-                        title={p.available ? 'Marcar no disponible' : 'Marcar disponible'}
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          {p.available ? (
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                          ) : (
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                          )}
-                        </svg>
-                      </button>
-                    )}
-                    <button
-                      onClick={() => startEdit(p)}
-                      className="bg-amber-100 text-amber-600 p-2 rounded-lg hover:bg-amber-200 active:scale-95 transition-all"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </button>
-                    {isAdmin && (
-                      <button
-                        onClick={() => handleDelete(p.id)}
-                        className="bg-red-100 text-red-500 p-2 rounded-lg hover:bg-red-200 active:scale-95 transition-all"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
+                      <>
+                        <button
+                          onClick={() => handleToggleAvailable(p)}
+                          className={`p-2 rounded-lg transition-all ${
+                            p.available
+                              ? 'bg-green-100 text-green-600 hover:bg-green-200'
+                              : 'bg-red-100 text-red-500 hover:bg-red-200'
+                          }`}
+                          title={p.available ? 'Marcar no disponible' : 'Marcar disponible'}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            {p.available ? (
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                            ) : (
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                            )}
+                          </svg>
+                        </button>
+                        {p.available && (
+                          <>
+                            <button
+                              onClick={() => startEdit(p)}
+                              className="bg-amber-100 text-amber-600 p-2 rounded-lg hover:bg-amber-200 active:scale-95 transition-all"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => handleDelete(p.id)}
+                              className="bg-red-100 text-red-500 p-2 rounded-lg hover:bg-red-200 active:scale-95 transition-all"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
