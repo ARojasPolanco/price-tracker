@@ -2,7 +2,7 @@ import { catchAsync } from "../errors/catchAsync.js";
 import * as productService from "../services/productService.js";
 
 export const list = catchAsync(async (req, res) => {
-  const products = await productService.getAll(req.query.search);
+  const products = await productService.getAll(req.query.search, req.query.categoryId);
   res.json(products);
 });
 

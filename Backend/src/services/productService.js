@@ -1,19 +1,27 @@
 import { Op } from "sequelize";
 import Product from "../models/Product.js";
+import Category from "../models/Category.js";
 import { AppError } from "../errors/appError.js";
 
-export const getAll = async (search) => {
+export const getAll = async (search, categoryId) => {
+  const where = {};
   if (search) {
-    return await Product.findAll({
-      where: { name: { [Op.iLike]: `%${search}%` } },
-      order: [["name", "ASC"]],
-    });
+    where.name = { [Op.iLike]: `%${search}%` };
   }
-  return await Product.findAll({ order: [["name", "ASC"]] });
+  if (categoryId) {
+    where.categoryId = categoryId;
+  }
+  return await Product.findAll({
+    where,
+    include: [{ model: Category, attributes: ["id", "name"] }],
+    order: [["name", "ASC"]],
+  });
 };
 
 export const getById = async (id) => {
-  const product = await Product.findByPk(id);
+  const product = await Product.findByPk(id, {
+    include: [{ model: Category, attributes: ["id", "name"] }],
+  });
   if (!product) throw new AppError("Product not found", 404);
   return product;
 };
