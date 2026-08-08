@@ -3,20 +3,16 @@ import bcrypt from "bcryptjs";
 import { sequelize } from "../../src/config/database.js";
 import User from "../../src/models/User.js";
 
+const VENDOR_PASSWORD = "mostrador123";
+const ADMIN_PASSWORD = "barbara123";
+
 async function seed() {
   try {
     await sequelize.authenticate();
     console.log("Database connected");
 
-    const vendorPassword = process.env.VENDOR_PASSWORD;
-    const adminPassword = process.env.ADMIN_PASSWORD;
-
-    if (!vendorPassword || !adminPassword) {
-      throw new Error("VENDOR_PASSWORD and ADMIN_PASSWORD must be set in .env");
-    }
-
-    const vendorHash = await bcrypt.hash(vendorPassword, 10);
-    const adminHash = await bcrypt.hash(adminPassword, 10);
+    const vendorHash = await bcrypt.hash(VENDOR_PASSWORD, 10);
+    const adminHash = await bcrypt.hash(ADMIN_PASSWORD, 10);
 
     await sequelize.sync();
 
