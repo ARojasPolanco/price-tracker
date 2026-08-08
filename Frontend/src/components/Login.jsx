@@ -19,10 +19,10 @@ export default function Login({ onLogin }) {
         body: JSON.stringify({ username, password }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
 
       if (!res.ok) {
-        throw new Error(data.error || "Login failed");
+        throw new Error(data?.error || data?.message || "Usuario o contraseña incorrectos");
       }
 
       onLogin(data.token, data.user);
