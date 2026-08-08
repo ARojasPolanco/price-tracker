@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import { getCreditAccounts, getCreditAccountById, createCreditAccount } from "../services/api";
+import { getCreditAccounts, getClosure, createCreditAccount, settleCreditAccount } from "../services/api";
 
 export default function CreditAccounts() {
   const [accounts, setAccounts] = useState([]);
-  const [selectedAccount, setSelectedAccount] = useState(null);
+  const [closureData, setClosureData] = useState(null);
+  const [showSettleConfirm, setShowSettleConfirm] = useState(false);
   const [name, setName] = useState("");
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [loading, setLoading] = useState(false);
 
   async function load() {
@@ -13,7 +15,8 @@ export default function CreditAccounts() {
       const data = await getCreditAccounts();
       setAccounts(data);
     } catch (err) {
-      setError(err.message);
+      const msg = typeof err.message === "string" ? err.message : "Error al cargar datos";
+      setError(msg);
     }
   }
 
@@ -24,24 +27,47 @@ export default function CreditAccounts() {
   async function handleCreate(e) {
     e.preventDefault();
     setError(null);
+    setSuccess(null);
     setLoading(true);
     try {
       await createCreditAccount({ name });
       setName("");
       load();
     } catch (err) {
-      setError(err.message);
+      const msg = typeof err.message === "string" ? err.message : "Error al crear cuenta";
+      setError(msg);
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleViewDetail(id) {
+  async function handleViewClosure(id) {
     try {
-      const account = await getCreditAccountById(id);
-      setSelectedAccount(account);
+      const data = await getClosure(id);
+      setClosureData(data);
+      setShowSettleConfirm(false);
     } catch (err) {
-      setError(err.message);
+      const msg = typeof err.message === "string" ? err.message : "Error al cargar cierre";
+      setError(msg);
+    }
+  }
+
+  async function handleSettle() {
+    if (!closureData) return;
+    setError(null);
+    setSuccess(null);
+    setLoading(true);
+    try {
+      await settleCreditAccount(closureData.id);
+      setSuccess(`Cuenta de ${closureData.name} saldada correctamente`);
+      setClosureData(null);
+      setShowSettleConfirm(false);
+      load();
+    } catch (err) {
+      const msg = typeof err.message === "string" ? err.message : "Error al saldar cuenta";
+      setError(msg);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -52,6 +78,11 @@ export default function CreditAccounts() {
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg mb-3 text-xs">
           {error}
+        </div>
+      )}
+      {success && (
+        <div className="bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-lg mb-3 text-xs">
+          {success}
         </div>
       )}
 
@@ -92,12 +123,14 @@ export default function CreditAccounts() {
                   Saldo: ${parseFloat(account.balance).toFixed(2)}
                 </p>
               </div>
-              <button
-                onClick={() => handleViewDetail(account.id)}
-                className="bg-indigo-100 text-indigo-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-indigo-200 active:scale-95 transition-all"
-              >
-                Ver detalle
-              </button>
+              {parseFloat(account.balance) > 0 && (
+                <button
+                  onClick={() => handleViewClosure(account.id)}
+                  className="bg-indigo-100 text-indigo-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-indigo-200 active:scale-95 transition-all"
+                >
+                  Ver cierre
+                </button>
+              )}
             </div>
           </div>
         ))}
@@ -109,15 +142,16 @@ export default function CreditAccounts() {
         </div>
       )}
 
-      {/* Detalle de cuenta seleccionada */}
-      {selectedAccount && (
+      {/* Modal de cierre */}
+      {closureData && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-lg max-w-md w-full max-h-[80vh] overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="p-4">
+              {/* Header */}
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-800">{selectedAccount.name}</h3>
+                <h3 className="text-lg font-bold text-gray-800">{closureData.name}</h3>
                 <button
-                  onClick={() => setSelectedAccount(null)}
+                  onClick={() => { setClosureData(null); setShowSettleConfirm(false); }}
                   className="text-gray-400 hover:text-gray-600"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -126,19 +160,19 @@ export default function CreditAccounts() {
                 </button>
               </div>
 
-              <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                <p className="text-sm text-gray-600">Saldo actual</p>
-                <p className={`text-2xl font-bold ${
-                  parseFloat(selectedAccount.balance) > 0 ? 'text-red-600' : 'text-green-600'
-                }`}>
-                  ${parseFloat(selectedAccount.balance).toFixed(2)}
+              {/* Saldo */}
+              <div className="bg-red-50 rounded-lg p-3 mb-4">
+                <p className="text-xs text-red-600">Saldo pendiente</p>
+                <p className="text-2xl font-bold text-red-700">
+                  ${parseFloat(closureData.balance).toFixed(2)}
                 </p>
               </div>
 
+              {/* Items pendientes */}
               <h4 className="text-sm font-medium text-gray-700 mb-2">Movimientos pendientes</h4>
-              {selectedAccount.CreditAccountItems && selectedAccount.CreditAccountItems.length > 0 ? (
-                <div className="space-y-2">
-                  {selectedAccount.CreditAccountItems.map((item) => (
+              {closureData.items && closureData.items.length > 0 ? (
+                <div className="space-y-2 mb-4">
+                  {closureData.items.map((item) => (
                     <div key={item.id} className="flex items-center justify-between bg-gray-50 rounded-lg p-2">
                       <div>
                         <p className="text-xs text-gray-500">
@@ -152,7 +186,41 @@ export default function CreditAccounts() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-gray-400">Sin movimientos pendientes</p>
+                <p className="text-sm text-gray-400 mb-4">Sin movimientos pendientes</p>
+              )}
+
+              {/* Confirmación de pago */}
+              {showSettleConfirm ? (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                  <p className="text-sm font-medium text-yellow-800 mb-2">
+                    ¿Confirmar pago de ${parseFloat(closureData.balance).toFixed(2)}?
+                  </p>
+                  <p className="text-xs text-yellow-700 mb-3">
+                    Esta acción archivará todos los movimientos pendientes y el saldo quedará en $0.
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSettle}
+                      disabled={loading}
+                      className="flex-1 bg-green-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-green-700 active:scale-95 transition-all disabled:opacity-50"
+                    >
+                      {loading ? "Procesando..." : "Confirmar pago"}
+                    </button>
+                    <button
+                      onClick={() => setShowSettleConfirm(false)}
+                      className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg text-sm font-medium hover:bg-gray-300 active:scale-95 transition-all"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowSettleConfirm(true)}
+                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-2.5 rounded-lg font-medium text-sm hover:shadow-lg active:scale-98 transition-all duration-200"
+                >
+                  Marcar como pagada
+                </button>
               )}
             </div>
           </div>

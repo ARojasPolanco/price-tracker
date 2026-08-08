@@ -15,3 +15,13 @@ export const create = catchAsync(async (req, res) => {
   const account = await creditAccountService.create(req.body);
   res.status(201).json(account);
 });
+
+export const getClosure = catchAsync(async (req, res) => {
+  const closure = await creditAccountService.getClosure(req.params.id);
+  res.json(closure);
+});
+
+export const settle = catchAsync(async (req, res) => {
+  const account = await creditAccountService.settle(req.params.id);
+  res.json(account);
+});

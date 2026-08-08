@@ -9,5 +9,7 @@ const router = Router();
 router.get("/", protect, controller.list);
 router.get("/:id", protect, requireRole("administrador"), controller.getCreditAccountById);
 router.post("/", protect, requireRole("administrador"), validate(createCreditAccountSchema), controller.create);
+router.get("/:id/closure", protect, requireRole("administrador"), controller.getClosure);
+router.post("/:id/settle", protect, requireRole("administrador"), controller.settle);
 
 export default router;

@@ -88,6 +88,16 @@ export function createCreditAccount(data) {
   });
 }
 
+export function getClosure(id) {
+  return request(`/credit-accounts/${id}/closure`);
+}
+
+export function settleCreditAccount(id) {
+  return request(`/credit-accounts/${id}/settle`, {
+    method: "POST",
+  });
+}
+
 // Sales
 export function getSales() {
   return request("/sales");
