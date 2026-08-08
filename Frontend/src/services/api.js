@@ -71,3 +71,19 @@ export function updateCategory(id, data) {
 export function deleteCategory(id) {
   return request(`/categories/${id}`, { method: "DELETE" });
 }
+
+// Credit Accounts
+export function getCreditAccounts() {
+  return request("/credit-accounts");
+}
+
+export function getCreditAccountById(id) {
+  return request(`/credit-accounts/${id}`);
+}
+
+export function createCreditAccount(data) {
+  return request("/credit-accounts", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}

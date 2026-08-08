@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import Login from "./components/Login";
 import ProductList from "./components/ProductList";
+import CreditAccounts from "./components/CreditAccounts";
 
 export default function App() {
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
+  const [view, setView] = useState("products");
 
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
@@ -33,23 +35,56 @@ export default function App() {
     return <Login onLogin={handleLogin} />;
   }
 
+  const isAdmin = user?.role === "administrador";
+
   return (
     <div>
-      <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
-        <div className="text-sm text-gray-600">
-          <span className="font-medium">{user.username}</span>
-          <span className="ml-2 text-xs bg-gray-100 px-2 py-0.5 rounded-full">
-            {user.role}
-          </span>
+      {/* Navbar */}
+      <div className="bg-white border-b border-gray-200 px-4 py-2">
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-sm text-gray-600">
+            <span className="font-medium">{user.username}</span>
+            <span className="ml-2 text-xs bg-gray-100 px-2 py-0.5 rounded-full">
+              {user.role}
+            </span>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="text-xs text-gray-500 hover:text-gray-700"
+          >
+            Salir
+          </button>
         </div>
-        <button
-          onClick={handleLogout}
-          className="text-xs text-gray-500 hover:text-gray-700"
-        >
-          Salir
-        </button>
+        {/* Tabs de navegación */}
+        <div className="flex gap-1">
+          <button
+            onClick={() => setView("products")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              view === "products"
+                ? "bg-indigo-100 text-indigo-700"
+                : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            Productos
+          </button>
+          {isAdmin && (
+            <button
+              onClick={() => setView("credit-accounts")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                view === "credit-accounts"
+                  ? "bg-indigo-100 text-indigo-700"
+                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+              }`}
+            >
+              Cuentas Corrientes
+            </button>
+          )}
+        </div>
       </div>
-      <ProductList token={token} />
+
+      {/* Contenido */}
+      {view === "products" && <ProductList token={token} />}
+      {view === "credit-accounts" && isAdmin && <CreditAccounts />}
     </div>
   );
 }
