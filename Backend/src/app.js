@@ -28,10 +28,10 @@ const globalLimiter = rateLimit({
 });
 app.use(globalLimiter);
 
-// Stricter limiter for login: 5 req/min
+// Stricter limiter for login: 20 req/min
 const loginLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 5,
+  max: 20,
   message: { error: "Too many login attempts, try again later" },
 });
 app.use("/api/v1/auth/login", loginLimiter);
