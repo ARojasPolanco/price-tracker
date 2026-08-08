@@ -22,8 +22,12 @@ async function request(path, options = {}) {
   return res.json();
 }
 
-export function getProducts(search) {
-  const query = search ? `?search=${encodeURIComponent(search)}` : "";
+// Products
+export function getProducts(search, categoryId) {
+  const params = new URLSearchParams();
+  if (search) params.set("search", search);
+  if (categoryId) params.set("categoryId", categoryId);
+  const query = params.toString() ? `?${params.toString()}` : "";
   return request(`/products${query}`);
 }
 
@@ -43,4 +47,27 @@ export function updateProduct(id, data) {
 
 export function deleteProduct(id) {
   return request(`/products/${id}`, { method: "DELETE" });
+}
+
+// Categories
+export function getCategories() {
+  return request("/categories");
+}
+
+export function createCategory(data) {
+  return request("/categories", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export function updateCategory(id, data) {
+  return request(`/categories/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+export function deleteCategory(id) {
+  return request(`/categories/${id}`, { method: "DELETE" });
 }
