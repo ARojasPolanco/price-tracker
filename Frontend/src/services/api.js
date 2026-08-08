@@ -151,3 +151,39 @@ export function markInvoiceAsPaid(id) {
 export function deleteInvoice(id) {
   return request(`/invoices/${id}`, { method: "DELETE" });
 }
+
+// Reports
+export function getSalesReport(period, startDate, endDate) {
+  const params = new URLSearchParams();
+  if (period) params.set("period", period);
+  if (startDate) params.set("startDate", startDate);
+  if (endDate) params.set("endDate", endDate);
+  const query = params.toString() ? `?${params.toString()}` : "";
+  return request(`/reports/sales${query}`);
+}
+
+export function getIncomeReport(period, startDate, endDate) {
+  const params = new URLSearchParams();
+  if (period) params.set("period", period);
+  if (startDate) params.set("startDate", startDate);
+  if (endDate) params.set("endDate", endDate);
+  const query = params.toString() ? `?${params.toString()}` : "";
+  return request(`/reports/income${query}`);
+}
+
+export function getExpensesReport(period, startDate, endDate) {
+  const params = new URLSearchParams();
+  if (period) params.set("period", period);
+  if (startDate) params.set("startDate", startDate);
+  if (endDate) params.set("endDate", endDate);
+  const query = params.toString() ? `?${params.toString()}` : "";
+  return request(`/reports/expenses${query}`);
+}
+
+export function getInvoicesReport() {
+  return request("/reports/invoices");
+}
+
+export function getPendingCreditAccountsReport() {
+  return request("/reports/credit-accounts-pending");
+}

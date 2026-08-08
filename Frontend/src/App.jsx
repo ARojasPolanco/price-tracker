@@ -5,6 +5,7 @@ import CreditAccounts from "./components/CreditAccounts";
 import SaleForm from "./components/SaleForm";
 import Expenses from "./components/Expenses";
 import Invoices from "./components/Invoices";
+import Reports from "./components/Reports";
 
 export default function App() {
   const [token, setToken] = useState(null);
@@ -112,6 +113,16 @@ export default function App() {
               >
                 Facturas
               </button>
+              <button
+                onClick={() => setView("reports")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
+                  view === "reports"
+                    ? "bg-indigo-100 text-indigo-700"
+                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                Reportes
+              </button>
             </>
           )}
         </div>
@@ -123,6 +134,7 @@ export default function App() {
       {view === "credit-accounts" && isAdmin && <CreditAccounts />}
       {view === "expenses" && isAdmin && <Expenses />}
       {view === "invoices" && isAdmin && <Invoices />}
+      {view === "reports" && isAdmin && <Reports />}
     </div>
   );
 }
