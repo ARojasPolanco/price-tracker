@@ -113,3 +113,41 @@ export function createSale(data) {
     body: JSON.stringify(data),
   });
 }
+
+// Expenses
+export function getExpenses() {
+  return request("/expenses");
+}
+
+export function createExpense(data) {
+  return request("/expenses", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export function deleteExpense(id) {
+  return request(`/expenses/${id}`, { method: "DELETE" });
+}
+
+// Invoices
+export function getInvoices() {
+  return request("/invoices");
+}
+
+export function createInvoice(data) {
+  return request("/invoices", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export function markInvoiceAsPaid(id) {
+  return request(`/invoices/${id}/pay`, {
+    method: "PATCH",
+  });
+}
+
+export function deleteInvoice(id) {
+  return request(`/invoices/${id}`, { method: "DELETE" });
+}
