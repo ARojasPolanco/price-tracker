@@ -28,7 +28,8 @@ export default function SaleForm() {
         setProducts(productsData.filter((p) => p.available));
         setCreditAccounts(accountsData);
       } catch (err) {
-        setError(err.message);
+        const msg = typeof err.message === "string" ? err.message : "Error al cargar datos";
+        setError(msg);
       }
     }
     load();
@@ -84,7 +85,11 @@ export default function SaleForm() {
   async function handleSubmit(e) {
     e.preventDefault();
     if (items.length === 0) {
-      setError("Add at least one item");
+      setError("Agregá al menos un producto");
+      return;
+    }
+    if (paymentMethod === "CUENTA_CORRIENTE" && !creditAccountId) {
+      setError("Seleccioná una cuenta corriente");
       return;
     }
     setError(null);
@@ -111,7 +116,8 @@ export default function SaleForm() {
       setPaymentMethod("EFECTIVO");
       setCreditAccountId("");
     } catch (err) {
-      setError(err.message);
+      const msg = typeof err.message === "string" ? err.message : "Error al registrar la venta";
+      setError(msg);
     } finally {
       setLoading(false);
     }
