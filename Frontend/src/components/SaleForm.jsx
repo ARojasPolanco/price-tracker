@@ -8,8 +8,8 @@ export default function SaleForm() {
   const [paymentMethod, setPaymentMethod] = useState("EFECTIVO");
   const [creditAccountId, setCreditAccountId] = useState("");
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [completedSale, setCompletedSale] = useState(null);
 
   // Add item form
   const [addMode, setAddMode] = useState("catalog"); // catalog or custom
@@ -93,7 +93,6 @@ export default function SaleForm() {
       return;
     }
     setError(null);
-    setSuccess(null);
     setLoading(true);
 
     try {
@@ -110,8 +109,8 @@ export default function SaleForm() {
         payload.creditAccountId = parseInt(creditAccountId);
       }
 
-      await createSale(payload);
-      setSuccess("Venta registrada correctamente");
+      const sale = await createSale(payload);
+      setCompletedSale(sale);
       setItems([]);
       setPaymentMethod("EFECTIVO");
       setCreditAccountId("");
@@ -123,6 +122,16 @@ export default function SaleForm() {
     }
   }
 
+  function getPaymentMethodLabel(method) {
+    const labels = {
+      EFECTIVO: "Efectivo",
+      MERCADO_PAGO: "Mercado Pago",
+      CUENTA_DNI: "Cuenta DNI",
+      CUENTA_CORRIENTE: "Cuenta Corriente",
+    };
+    return labels[method] || method;
+  }
+
   return (
     <div className="max-w-md mx-auto px-4 py-4">
       <h2 className="text-lg font-bold text-gray-800 mb-4">Nueva Venta</h2>
@@ -130,11 +139,6 @@ export default function SaleForm() {
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg mb-3 text-xs">
           {error}
-        </div>
-      )}
-      {success && (
-        <div className="bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-lg mb-3 text-xs">
-          {success}
         </div>
       )}
 
@@ -316,6 +320,92 @@ export default function SaleForm() {
           </button>
         </div>
       </form>
+
+      {/* Modal de venta completada */}
+      {completedSale && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-4">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-800">Venta registrada</h3>
+                </div>
+                <button
+                  onClick={() => setCompletedSale(null)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Info de la venta */}
+              <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                <div className="flex justify-between text-xs text-gray-500 mb-1">
+                  <span>ID: #{completedSale.id}</span>
+                  <span>{new Date(completedSale.date).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-700">
+                    {getPaymentMethodLabel(completedSale.paymentMethod)}
+                  </span>
+                  {completedSale.CreditAccount && (
+                    <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">
+                      {completedSale.CreditAccount.name}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Items */}
+              <div className="space-y-2 mb-3">
+                {completedSale.SaleItems.map((item) => (
+                  <div key={item.id} className="flex items-center justify-between bg-gray-50 rounded-lg p-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-800 truncate">
+                        {item.Product ? item.Product.name : item.customName}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {item.Product ? (
+                          <>
+                            {parseFloat(item.quantity)} {item.Product.saleType === "kilo" ? "kg" : "u"} × ${parseFloat(item.unitPriceAtSale).toFixed(2)}
+                          </>
+                        ) : (
+                          "Producto libre"
+                        )}
+                      </p>
+                    </div>
+                    <p className="text-sm font-bold text-indigo-600">
+                      ${parseFloat(item.subtotal).toFixed(2)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Total */}
+              <div className="bg-indigo-50 rounded-lg p-3 mb-4">
+                <p className="text-xs text-indigo-600">Total</p>
+                <p className="text-2xl font-bold text-indigo-700">${parseFloat(completedSale.total).toFixed(2)}</p>
+              </div>
+
+              {/* Botón cerrar */}
+              <button
+                onClick={() => setCompletedSale(null)}
+                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2.5 rounded-lg font-medium text-sm hover:shadow-lg active:scale-98 transition-all duration-200"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
