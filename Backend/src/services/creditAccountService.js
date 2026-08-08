@@ -1,5 +1,8 @@
 import CreditAccount from "../models/CreditAccount.js";
 import CreditAccountItem from "../models/CreditAccountItem.js";
+import Sale from "../models/Sale.js";
+import SaleItem from "../models/SaleItem.js";
+import Product from "../models/Product.js";
 import { AppError } from "../errors/appError.js";
 import { sequelize } from "../config/database.js";
 
@@ -36,6 +39,17 @@ export const getClosure = async (id) => {
         where: { archived: false },
         required: false,
         order: [["date", "DESC"]],
+        include: [
+          {
+            model: Sale,
+            include: [
+              {
+                model: SaleItem,
+                include: [{ model: Product, attributes: ["id", "name", "saleType"] }],
+              },
+            ],
+          },
+        ],
       },
     ],
   });

@@ -1,6 +1,7 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/database.js";
 import CreditAccount from "./CreditAccount.js";
+import Sale from "./Sale.js";
 
 const CreditAccountItem = sequelize.define("CreditAccountItem", {
   id: {
@@ -34,5 +35,8 @@ const CreditAccountItem = sequelize.define("CreditAccountItem", {
 
 CreditAccountItem.belongsTo(CreditAccount, { foreignKey: "creditAccountId" });
 CreditAccount.hasMany(CreditAccountItem, { foreignKey: "creditAccountId" });
+
+CreditAccountItem.belongsTo(Sale, { foreignKey: "saleId" });
+Sale.hasMany(CreditAccountItem, { foreignKey: "saleId" });
 
 export default CreditAccountItem;

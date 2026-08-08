@@ -171,17 +171,36 @@ export default function CreditAccounts() {
               {/* Items pendientes */}
               <h4 className="text-sm font-medium text-gray-700 mb-2">Movimientos pendientes</h4>
               {closureData.items && closureData.items.length > 0 ? (
-                <div className="space-y-2 mb-4">
+                <div className="space-y-3 mb-4">
                   {closureData.items.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between bg-gray-50 rounded-lg p-2">
-                      <div>
+                    <div key={item.id} className="bg-gray-50 rounded-lg p-3">
+                      <div className="flex items-center justify-between mb-2">
                         <p className="text-xs text-gray-500">
                           {new Date(item.date).toLocaleDateString()}
                         </p>
-                        <p className="text-sm font-medium text-gray-800">
+                        <p className="text-sm font-bold text-gray-800">
                           ${parseFloat(item.amount).toFixed(2)}
                         </p>
                       </div>
+                      {item.Sale && item.Sale.SaleItems && (
+                        <div className="space-y-1">
+                          {item.Sale.SaleItems.map((si) => (
+                            <div key={si.id} className="flex items-center justify-between text-xs">
+                              <span className="text-gray-600">
+                                {si.Product ? si.Product.name : si.customName}
+                                {si.Product && (
+                                  <span className="text-gray-400 ml-1">
+                                    ({parseFloat(si.quantity)} {si.Product.saleType === "kilo" ? "kg" : "u"})
+                                  </span>
+                                )}
+                              </span>
+                              <span className="text-gray-700 font-medium">
+                                ${parseFloat(si.subtotal).toFixed(2)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
