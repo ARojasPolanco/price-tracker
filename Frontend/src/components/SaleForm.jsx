@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getProducts, getCreditAccounts, createSale } from "../services/api";
 
 export default function SaleForm() {
@@ -12,11 +12,16 @@ export default function SaleForm() {
   const [completedSale, setCompletedSale] = useState(null);
 
   // Add item form
-  const [addMode, setAddMode] = useState("catalog"); // catalog or custom
-  const [selectedProductId, setSelectedProductId] = useState("");
+  const [addMode, setAddMode] = useState("catalog");
+  const [searchText, setSearchText] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showDropdown, setShowDropdown] = useState(false);
   const [quantity, setQuantity] = useState("");
   const [customName, setCustomName] = useState("");
   const [customSubtotal, setCustomSubtotal] = useState("");
+
+  const dropdownRef = useRef(null);
+  const searchRef = useRef(null);
 
   useEffect(() => {
     async function load() {
@@ -35,29 +40,58 @@ export default function SaleForm() {
     load();
   }, []);
 
+  // Cerrar dropdown al hacer click fuera
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filteredProducts = searchText.length > 0
+    ? products
+        .filter((p) => p.name.toLowerCase().includes(searchText.toLowerCase()))
+        .slice(0, 10)
+    : [];
+
+  function selectProduct(product) {
+    setSelectedProduct(product);
+    setSearchText(product.name);
+    setShowDropdown(false);
+    setQuantity("");
+    searchRef.current?.focus();
+  }
+
+  function clearSelection() {
+    setSelectedProduct(null);
+    setSearchText("");
+    setQuantity("");
+  }
+
   function addItem() {
     if (addMode === "catalog") {
-      const product = products.find((p) => p.id === parseInt(selectedProductId));
-      if (!product || !quantity || parseFloat(quantity) <= 0) return;
+      if (!selectedProduct || !quantity || parseFloat(quantity) <= 0) return;
 
       const qty = parseFloat(quantity);
-      const unitPrice = parseFloat(product.price);
+      const unitPrice = parseFloat(selectedProduct.price);
       const subtotal = unitPrice * qty;
 
       setItems([
         ...items,
         {
           type: "catalog",
-          productId: product.id,
-          name: product.name,
-          saleType: product.saleType,
+          productId: selectedProduct.id,
+          name: selectedProduct.name,
+          saleType: selectedProduct.saleType,
           quantity: qty,
           unitPrice,
           subtotal,
         },
       ]);
-      setSelectedProductId("");
-      setQuantity("");
+      clearSelection();
     } else {
       if (!customName || !customSubtotal || parseFloat(customSubtotal) <= 0) return;
 
@@ -147,7 +181,7 @@ export default function SaleForm() {
         <div className="flex gap-1 mb-3">
           <button
             type="button"
-            onClick={() => setAddMode("catalog")}
+            onClick={() => { setAddMode("catalog"); clearSelection(); }}
             className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all ${
               addMode === "catalog"
                 ? "bg-indigo-100 text-indigo-700"
@@ -171,32 +205,104 @@ export default function SaleForm() {
 
         {addMode === "catalog" ? (
           <div className="space-y-2">
-            <select
-              value={selectedProductId}
-              onChange={(e) => setSelectedProductId(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="">Seleccionar producto</option>
-              {products.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name} - ${parseFloat(p.price).toFixed(2)} ({p.saleType === "kilo" ? "/kg" : "/u"})
-                </option>
-              ))}
-            </select>
+            {/* Búsqueda de productos */}
+            <div className="relative" ref={dropdownRef}>
+              <div className="relative">
+                <input
+                  ref={searchRef}
+                  type="text"
+                  placeholder="Buscar producto..."
+                  value={searchText}
+                  onChange={(e) => {
+                    setSearchText(e.target.value);
+                    setShowDropdown(true);
+                    if (selectedProduct) setSelectedProduct(null);
+                  }}
+                  onFocus={() => setShowDropdown(true)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                {searchText && (
+                  <button
+                    type="button"
+                    onClick={clearSelection}
+                    className="absolute right-2 top-2.5 text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+
+              {/* Dropdown de resultados */}
+              {showDropdown && filteredProducts.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  {filteredProducts.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => selectProduct(p)}
+                      className="w-full text-left px-3 py-2.5 hover:bg-indigo-50 active:bg-indigo-100 transition-all border-b border-gray-100 last:border-b-0"
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-800">{p.name}</span>
+                        <span className="text-sm font-bold text-indigo-600">
+                          ${parseFloat(p.price).toFixed(2)}
+                          <span className="text-xs text-gray-400 ml-1">
+                            {p.saleType === "kilo" ? "/kg" : "/u"}
+                          </span>
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Sin resultados */}
+              {showDropdown && searchText && filteredProducts.length === 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-3">
+                  <p className="text-sm text-gray-500 text-center">No se encontraron productos</p>
+                </div>
+              )}
+            </div>
+
+            {/* Producto seleccionado + cantidad */}
+            {selectedProduct && (
+              <div className="bg-indigo-50 rounded-lg p-2 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-indigo-800">{selectedProduct.name}</p>
+                  <p className="text-xs text-indigo-600">
+                    ${parseFloat(selectedProduct.price).toFixed(2)} {selectedProduct.saleType === "kilo" ? "/kg" : "/u"}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={clearSelection}
+                  className="text-indigo-400 hover:text-indigo-600"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            )}
+
             <div className="flex gap-2">
               <input
                 type="number"
-                placeholder={products.find((p) => p.id === parseInt(selectedProductId))?.saleType === "kilo" ? "Peso (kg)" : "Cantidad"}
+                placeholder={selectedProduct?.saleType === "kilo" ? "Peso (kg)" : "Cantidad"}
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
                 min="0"
                 step="0.001"
-                className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                disabled={!selectedProduct}
+                className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <button
                 type="button"
                 onClick={addItem}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 active:scale-95 transition-all"
+                disabled={!selectedProduct || !quantity}
+                className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 +
               </button>

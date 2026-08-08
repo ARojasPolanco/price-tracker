@@ -95,17 +95,41 @@ export default function App() {
             </>
           ) : (
             <>
-              {/* Vendedor: navbar más grande */}
-              <div>
-                <h1 className="text-lg font-bold text-gray-800">Price Tracker</h1>
-                <p className="text-xs text-gray-500">{user.username} — Vendedor</p>
+              {/* Vendedor: navbar con tabs */}
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-2">
+                  <h1 className="text-lg font-bold text-gray-800">Price Tracker</h1>
+                  <button
+                    onClick={handleLogout}
+                    className="bg-red-100 text-red-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-200 active:scale-95 transition-all"
+                  >
+                    Salir
+                  </button>
+                </div>
+                {/* Tabs de navegación */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setView("products")}
+                    className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                      view === "products"
+                        ? "bg-indigo-100 text-indigo-700 border-2 border-indigo-300"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  >
+                    📦 Productos
+                  </button>
+                  <button
+                    onClick={() => setView("new-sale")}
+                    className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                      view === "new-sale"
+                        ? "bg-indigo-100 text-indigo-700 border-2 border-indigo-300"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  >
+                    🛒 Nueva Venta
+                  </button>
+                </div>
               </div>
-              <button
-                onClick={handleLogout}
-                className="bg-red-100 text-red-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-200 active:scale-95 transition-all"
-              >
-                Salir
-              </button>
             </>
           )}
         </div>
