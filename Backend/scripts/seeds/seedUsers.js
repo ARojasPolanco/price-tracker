@@ -21,18 +21,18 @@ async function seed() {
     await sequelize.sync();
 
     const [vendor, createdVendor] = await User.findOrCreate({
-      where: { username: "vendedor" },
+      where: { username: "Mostrador" },
       defaults: {
-        username: "vendedor",
+        username: "Mostrador",
         passwordHash: vendorHash,
         role: "vendedor",
       },
     });
 
     const [admin, createdAdmin] = await User.findOrCreate({
-      where: { username: "admin" },
+      where: { username: "Barbara" },
       defaults: {
-        username: "admin",
+        username: "Barbara",
         passwordHash: adminHash,
         role: "administrador",
       },
