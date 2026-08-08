@@ -6,7 +6,7 @@ import { createCreditAccountSchema } from "../validations/creditAccountValidatio
 
 const router = Router();
 
-router.get("/", protect, requireRole("administrador"), controller.list);
+router.get("/", protect, controller.list);
 router.get("/:id", protect, requireRole("administrador"), controller.getCreditAccountById);
 router.post("/", protect, requireRole("administrador"), validate(createCreditAccountSchema), controller.create);
 
