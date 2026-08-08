@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Login from "./components/Login";
 import ProductList from "./components/ProductList";
 import CreditAccounts from "./components/CreditAccounts";
+import SaleForm from "./components/SaleForm";
 
 export default function App() {
   const [token, setToken] = useState(null);
@@ -56,10 +57,10 @@ export default function App() {
           </button>
         </div>
         {/* Tabs de navegación */}
-        <div className="flex gap-1">
+        <div className="flex gap-1 overflow-x-auto">
           <button
             onClick={() => setView("products")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
               view === "products"
                 ? "bg-indigo-100 text-indigo-700"
                 : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
@@ -67,10 +68,20 @@ export default function App() {
           >
             Productos
           </button>
+          <button
+            onClick={() => setView("new-sale")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
+              view === "new-sale"
+                ? "bg-indigo-100 text-indigo-700"
+                : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            Nueva Venta
+          </button>
           {isAdmin && (
             <button
               onClick={() => setView("credit-accounts")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
                 view === "credit-accounts"
                   ? "bg-indigo-100 text-indigo-700"
                   : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
@@ -84,6 +95,7 @@ export default function App() {
 
       {/* Contenido */}
       {view === "products" && <ProductList token={token} />}
+      {view === "new-sale" && <SaleForm />}
       {view === "credit-accounts" && isAdmin && <CreditAccounts />}
     </div>
   );

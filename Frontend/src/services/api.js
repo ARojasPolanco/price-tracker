@@ -87,3 +87,19 @@ export function createCreditAccount(data) {
     body: JSON.stringify(data),
   });
 }
+
+// Sales
+export function getSales() {
+  return request("/sales");
+}
+
+export function getSaleById(id) {
+  return request(`/sales/${id}`);
+}
+
+export function createSale(data) {
+  return request("/sales", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
