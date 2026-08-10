@@ -16,7 +16,8 @@ export default function SaleForm() {
   const [searchText, setSearchText] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [quantity, setQuantity] = useState("");
+  const [justSelected, setJustSelected] = useState(false);
+  const [quantity, setQuantity] = useState(1);
   const [customName, setCustomName] = useState("");
   const [customSubtotal, setCustomSubtotal] = useState("");
 
@@ -61,21 +62,23 @@ export default function SaleForm() {
     setSelectedProduct(product);
     setSearchText(product.name);
     setShowDropdown(false);
-    setQuantity("");
-    searchRef.current?.focus();
+    setJustSelected(true);
+    setQuantity(1);
   }
 
   function clearSelection() {
     setSelectedProduct(null);
     setSearchText("");
-    setQuantity("");
+    setQuantity(1);
+    setJustSelected(false);
+    setShowDropdown(false);
   }
 
   function addItem() {
     if (addMode === "catalog") {
-      if (!selectedProduct || !quantity || parseFloat(quantity) <= 0) return;
+      if (!selectedProduct || quantity <= 0) return;
 
-      const qty = parseFloat(quantity);
+      const qty = quantity;
       const unitPrice = parseFloat(selectedProduct.price);
       const subtotal = unitPrice * qty;
 
@@ -233,9 +236,12 @@ export default function SaleForm() {
                   onChange={(e) => {
                     setSearchText(e.target.value);
                     setShowDropdown(true);
+                    setJustSelected(false);
                     if (selectedProduct) setSelectedProduct(null);
                   }}
-                  onFocus={() => setShowDropdown(true)}
+                  onFocus={() => {
+                    if (!justSelected) setShowDropdown(true);
+                  }}
                   className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
                 {searchText && (
@@ -285,45 +291,60 @@ export default function SaleForm() {
 
             {/* Producto seleccionado + cantidad */}
             {selectedProduct && (
-              <div className="bg-indigo-50 rounded-lg p-2 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-indigo-800">{selectedProduct.name}</p>
-                  <p className="text-xs text-indigo-600">
-                    ${parseFloat(selectedProduct.price).toFixed(2)} {selectedProduct.saleType === "kilo" ? "/kg" : "/u"}
-                  </p>
+              <div className="space-y-2">
+                <div className="bg-indigo-50 rounded-lg p-2 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-indigo-800">{selectedProduct.name}</p>
+                    <p className="text-xs text-indigo-600">
+                      ${parseFloat(selectedProduct.price).toFixed(2)} {selectedProduct.saleType === "kilo" ? "/kg" : "/u"}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={clearSelection}
+                    className="text-indigo-400 hover:text-indigo-600"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={clearSelection}
-                  className="text-indigo-400 hover:text-indigo-600"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+
+                {/* Selector de cantidad con botones +/- */}
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg">
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(Math.max(0.001, quantity - (selectedProduct.saleType === "kilo" ? 0.1 : 1)))}
+                      className="px-4 py-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-l-lg transition-all"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 12H4" />
+                      </svg>
+                    </button>
+                    <span className="text-lg font-medium text-gray-800">
+                      {selectedProduct.saleType === "kilo" ? quantity.toFixed(1) : quantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(quantity + (selectedProduct.saleType === "kilo" ? 0.1 : 1))}
+                      className="px-4 py-2 text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-r-lg transition-all"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                      </svg>
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={addItem}
+                    className="bg-indigo-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 active:scale-95 transition-all"
+                  >
+                    Agregar
+                  </button>
+                </div>
               </div>
             )}
-
-            <div className="flex gap-2">
-              <input
-                type="number"
-                placeholder={selectedProduct?.saleType === "kilo" ? "Peso (kg)" : "Cantidad"}
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                min="0"
-                step="0.001"
-                disabled={!selectedProduct}
-                className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              />
-              <button
-                type="button"
-                onClick={addItem}
-                disabled={!selectedProduct || !quantity}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                +
-              </button>
-            </div>
           </div>
         ) : (
           <div className="space-y-2">
