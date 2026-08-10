@@ -114,6 +114,23 @@ export default function SaleForm() {
     setItems(items.filter((_, i) => i !== index));
   }
 
+  function updateItemQuantity(index, delta) {
+    const newItems = [...items];
+    const item = newItems[index];
+    const newQty = item.quantity + delta;
+
+    if (newQty <= 0) {
+      // Eliminar el producto si la cantidad llega a 0
+      setItems(items.filter((_, i) => i !== index));
+      return;
+    }
+
+    // Recalcular subtotal
+    item.quantity = newQty;
+    item.subtotal = item.unitPrice * newQty;
+    setItems(newItems);
+  }
+
   const total = items.reduce((sum, item) => sum + item.subtotal, 0);
 
   async function handleSubmit(e) {
@@ -360,7 +377,32 @@ export default function SaleForm() {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-bold text-indigo-600">
+                  {item.type === "catalog" && (
+                    <div className="flex items-center gap-1 bg-white rounded-lg border border-gray-200">
+                      <button
+                        type="button"
+                        onClick={() => updateItemQuantity(index, -1)}
+                        className="px-2 py-1 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-l-lg transition-all"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 12H4" />
+                        </svg>
+                      </button>
+                      <span className="text-sm font-medium text-gray-800 w-8 text-center">
+                        {item.saleType === "kilo" ? item.quantity.toFixed(1) : item.quantity}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => updateItemQuantity(index, 1)}
+                        className="px-2 py-1 text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-r-lg transition-all"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+                  <p className="text-sm font-bold text-indigo-600 min-w-[60px] text-right">
                     ${item.subtotal.toFixed(2)}
                   </p>
                   <button
@@ -369,7 +411,7 @@ export default function SaleForm() {
                     className="text-red-400 hover:text-red-600"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                   </button>
                 </div>
